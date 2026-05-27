@@ -1,0 +1,1197 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Escape del Algoritmo | X Simulado</title>
+  <style>
+    :root {
+      --bg-primary: #000000;
+      --bg-secondary: #16181c;
+      --bg-tertiary: #202327;
+      --bg-hover: #1d1f23;
+      --text-primary: #e7e9ea;
+      --text-secondary: #71767b;
+      --accent: #1d9bf0;
+      --accent-hover: #1a8cd8;
+      --danger: #f4212e;
+      --success: #00ba7c;
+      --warning: #ffad1f;
+      --border: #2f3336;
+      --font-main: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      --radius: 9999px;
+      --radius-card: 16px;
+      --shadow: 0 2px 8px rgba(0,0,0,0.4);
+      --transition: 0.2s ease;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      font-family: var(--font-main);
+      height: 100vh;
+      overflow: hidden;
+      -webkit-font-smoothing: antialiased;
+    }
+    .app-container {
+      display: grid;
+      grid-template-columns: 275px 1fr 350px;
+      height: 100vh;
+      max-width: 1300px;
+      margin: 0 auto;
+    }
+    /* SIDEBAR */
+    .sidebar {
+      padding: 12px 24px;
+      display: flex;
+      flex-direction: column;
+      border-right: 1px solid var(--border);
+      overflow-y: auto;
+    }
+    .logo { font-size: 28px; margin-bottom: 20px; color: var(--text-primary); user-select: none; cursor: pointer; }
+    .nav-item {
+      display: flex; align-items: center; gap: 16px;
+      padding: 12px 16px; border-radius: var(--radius);
+      cursor: pointer; transition: var(--transition); font-size: 20px;
+      margin-bottom: 4px; position: relative;
+    }
+    .nav-item:hover, .nav-item.active { background: var(--bg-hover); }
+    .nav-item svg { width: 26px; height: 26px; fill: currentColor; flex-shrink: 0; }
+    .nav-badge {
+      position: absolute; top: 8px; left: 28px;
+      background: var(--accent); color: #fff; font-size: 11px; font-weight: 700;
+      padding: 2px 6px; border-radius: 10px; min-width: 18px; text-align: center;
+    }
+    .btn-post {
+      margin-top: 20px; background: var(--accent); color: #fff;
+      border: none; padding: 16px; border-radius: var(--radius);
+      font-size: 17px; font-weight: 700; cursor: pointer;
+      transition: var(--transition); width: 100%;
+    }
+    .btn-post:hover { background: var(--accent-hover); }
+    .user-pill {
+      margin-top: auto; display: flex; align-items: center; gap: 10px;
+      padding: 12px; border-radius: var(--radius); cursor: pointer;
+    }
+    .user-pill:hover { background: var(--bg-hover); }
+    .user-pill .avatar { width: 40px; height: 40px; background: var(--accent); color: #fff; display: flex; align-items: center; justify-content: center; border-radius: 50%; font-weight: 700; }
+    .user-pill .info { flex: 1; }
+    .user-pill .name { font-weight: 700; font-size: 15px; }
+    .user-pill .handle { color: var(--text-secondary); font-size: 14px; }
+
+    /* FEED */
+    .feed-container {
+      border-right: 1px solid var(--border);
+      overflow-y: auto;
+      scrollbar-width: thin;
+      position: relative;
+    }
+    .feed-header {
+      position: sticky; top: 0; background: rgba(0,0,0,0.85);
+      backdrop-filter: blur(12px); padding: 16px; border-bottom: 1px solid var(--border);
+      font-weight: 700; font-size: 20px; z-index: 10;
+      display: flex; justify-content: space-between; align-items: center;
+    }
+    .algo-status { font-size: 13px; color: var(--text-secondary); font-weight: 400; display: flex; align-items: center; gap: 6px; }
+    .algo-status.manipulating { color: var(--danger); }
+    .algo-status.conscious { color: var(--success); }
+    .refresh-hint { font-size: 12px; color: var(--text-secondary); cursor: pointer; }
+    .refresh-hint:hover { color: var(--accent); }
+
+    .post {
+      padding: 16px; border-bottom: 1px solid var(--border);
+      display: flex; gap: 12px; cursor: pointer; transition: var(--transition);
+    }
+    .post:hover { background: var(--bg-hover); }
+    .avatar {
+      width: 40px; height: 40px; border-radius: 50%;
+      background: var(--bg-tertiary); flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: bold; color: var(--accent); user-select: none;
+    }
+    .post-content { flex: 1; min-width: 0; }
+    .post-meta { display: flex; gap: 6px; color: var(--text-secondary); font-size: 15px; margin-bottom: 4px; flex-wrap: wrap; }
+    .post-text { font-size: 15px; line-height: 1.4; margin-bottom: 12px; word-wrap: break-word; }
+    .post-tags { margin-bottom: 10px; }
+    .tag { display: inline-block; background: var(--bg-tertiary); padding: 4px 8px; border-radius: 6px; font-size: 13px; margin-right: 6px; color: var(--accent); cursor: pointer; transition: var(--transition); }
+    .tag:hover { background: var(--bg-hover); }
+    .post-actions { display: flex; justify-content: space-between; max-width: 420px; color: var(--text-secondary); font-size: 14px; }
+    .action-btn { display: flex; align-items: center; gap: 6px; cursor: pointer; transition: var(--transition); padding: 8px; border-radius: 50%; }
+    .action-btn:hover { background: rgba(29,155,240,0.1); color: var(--accent); }
+    .action-btn.liked { color: var(--danger); }
+    .action-btn.retweeted { color: var(--success); }
+    .promoted-badge { font-size: 12px; color: var(--text-secondary); display: flex; align-items: center; gap: 4px; margin-bottom: 6px; }
+    .algo-tag { font-size: 11px; background: rgba(29,155,240,0.15); color: var(--accent); padding: 2px 6px; border-radius: 4px; margin-left: 6px; }
+
+    /* RIGHT PANEL */
+    .right-panel { padding: 16px 24px; overflow-y: auto; }
+    .search-wrapper { position: relative; margin-bottom: 20px; }
+    .search-box {
+      background: var(--bg-tertiary); border-radius: var(--radius);
+      padding: 12px 16px; display: flex; align-items: center; gap: 10px;
+      border: 1px solid transparent; transition: var(--transition);
+    }
+    .search-box:focus-within { border-color: var(--accent); background: var(--bg-primary); }
+    .search-box input {
+      background: transparent; border: none; color: var(--text-primary);
+      width: 100%; outline: none; font-size: 15px;
+    }
+    .search-dropdown {
+      position: absolute; top: 100%; left: 0; right: 0;
+      background: var(--bg-secondary); border: 1px solid var(--border);
+      border-radius: 12px; margin-top: 4px; box-shadow: var(--shadow);
+      max-height: 320px; overflow-y: auto; display: none; z-index: 50;
+    }
+    .search-dropdown.open { display: block; }
+    .search-section { padding: 12px 16px 4px; font-size: 13px; color: var(--text-secondary); font-weight: 700; }
+    .search-item { padding: 12px 16px; cursor: pointer; transition: var(--transition); display: flex; justify-content: space-between; align-items: center; }
+    .search-item:hover { background: var(--bg-hover); }
+    .search-item .label { font-weight: 500; }
+    .search-item .meta { font-size: 13px; color: var(--text-secondary); }
+    .search-item.algo-suggest { border-left: 3px solid var(--warning); }
+
+    .card {
+      background: var(--bg-secondary); border-radius: var(--radius-card);
+      padding: 16px; margin-bottom: 20px;
+    }
+    .card-title { font-weight: 800; font-size: 20px; margin-bottom: 12px; }
+    .trend-item { padding: 12px 0; border-bottom: 1px solid var(--border); cursor: pointer; transition: var(--transition); }
+    .trend-item:hover { background: var(--bg-hover); margin: 0 -16px; padding: 12px 16px; }
+    .trend-item:last-child { border: none; }
+    .trend-category { font-size: 13px; color: var(--text-secondary); }
+    .trend-name { font-weight: 700; margin: 2px 0; }
+    .trend-count { font-size: 13px; color: var(--text-secondary); }
+    
+    .autonomy-meter { margin-top: 10px; }
+    .meter-bar { height: 8px; background: var(--bg-tertiary); border-radius: 4px; overflow: hidden; margin-top: 6px; }
+    .meter-fill { height: 100%; background: var(--accent); width: 15%; transition: width 0.5s ease, background 0.3s; }
+    .meter-label { display: flex; justify-content: space-between; font-size: 14px; margin-top: 4px; }
+    .meter-tip { font-size: 13px; color: var(--text-secondary); margin-top: 8px; line-height: 1.4; }
+
+    .follow-item { display: flex; gap: 10px; align-items: center; margin-bottom: 12px; cursor: pointer; padding: 8px; border-radius: 8px; transition: var(--transition); }
+    .follow-item:hover { background: var(--bg-hover); }
+    .follow-btn { margin-left: auto; background: var(--text-primary); color: var(--bg-primary); border: none; padding: 6px 14px; border-radius: var(--radius); font-weight: 700; font-size: 14px; cursor: pointer; transition: var(--transition); }
+    .follow-btn:hover { opacity: 0.9; }
+    .follow-btn.following { background: transparent; color: var(--text-primary); border: 1px solid var(--border); }
+
+    /* PANELS */
+    .slide-panel {
+      position: fixed; top: 0; right: 0; width: 420px; height: 100%;
+      background: var(--bg-primary); border-left: 1px solid var(--border);
+      transform: translateX(100%); transition: transform 0.3s cubic-bezier(0.2, 0, 0, 1);
+      z-index: 100; display: flex; flex-direction: column;
+    }
+    .slide-panel.open { transform: translateX(0); }
+    .panel-header { padding: 16px; border-bottom: 1px solid var(--border); font-weight: 700; display: flex; justify-content: space-between; align-items: center; font-size: 20px; }
+    .panel-list { flex: 1; overflow-y: auto; }
+    .panel-item { padding: 16px; display: flex; gap: 12px; cursor: pointer; border-bottom: 1px solid var(--border); transition: var(--transition); }
+    .panel-item:hover { background: var(--bg-hover); }
+    .panel-preview { flex: 1; min-width: 0; }
+    .panel-name { font-weight: 700; display: flex; justify-content: space-between; }
+    .panel-time { font-size: 13px; color: var(--text-secondary); font-weight: 400; }
+    .panel-text { color: var(--text-secondary); font-size: 14px; margin-top: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .unread-dot { width: 8px; height: 8px; background: var(--accent); border-radius: 50%; display: inline-block; margin-left: 6px; }
+
+    .chat-view { display: none; flex-direction: column; height: 100%; }
+    .chat-view.active { display: flex; }
+    .chat-header { padding: 12px 16px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 10px; }
+    .chat-messages { flex: 1; padding: 16px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; }
+    .bubble { max-width: 85%; padding: 12px 16px; border-radius: 18px; font-size: 15px; line-height: 1.4; word-wrap: break-word; }
+    .bubble.incoming { background: var(--bg-tertiary); align-self: flex-start; border-bottom-left-radius: 4px; }
+    .bubble.outgoing { background: var(--accent); color: #fff; align-self: flex-end; border-bottom-right-radius: 4px; }
+    .bubble a { color: var(--accent); text-decoration: underline; cursor: pointer; }
+    .chat-input { padding: 12px; border-top: 1px solid var(--border); display: flex; gap: 10px; }
+    .chat-input input { flex: 1; background: var(--bg-tertiary); border: none; padding: 12px; border-radius: var(--radius); color: var(--text-primary); outline: none; }
+    .chat-input button { background: var(--accent); color: #fff; border: none; padding: 0 16px; border-radius: var(--radius); cursor: pointer; font-weight: 700; transition: var(--transition); }
+    .chat-input button:hover { background: var(--accent-hover); }
+
+    /* EXPLORE & PROFILE PANELS */
+    .explore-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; padding: 16px; }
+    .explore-card { background: var(--bg-secondary); border-radius: 12px; padding: 14px; cursor: pointer; transition: var(--transition); }
+    .explore-card:hover { background: var(--bg-hover); transform: translateY(-2px); }
+    .explore-card h4 { font-size: 15px; margin-bottom: 6px; }
+    .explore-card p { font-size: 13px; color: var(--text-secondary); }
+    .explore-card .tag-sm { font-size: 11px; background: var(--bg-tertiary); padding: 2px 6px; border-radius: 4px; color: var(--accent); display: inline-block; margin-top: 6px; }
+
+    .profile-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; padding: 16px; text-align: center; }
+    .stat-box { background: var(--bg-secondary); padding: 12px; border-radius: 12px; }
+    .stat-num { font-size: 22px; font-weight: 800; color: var(--accent); }
+    .stat-label { font-size: 13px; color: var(--text-secondary); margin-top: 4px; }
+    .challenge-history { padding: 16px; }
+    .history-item { padding: 10px; border-bottom: 1px solid var(--border); font-size: 14px; display: flex; justify-content: space-between; }
+    .history-item:last-child { border: none; }
+    .history-status { font-weight: 700; }
+    .history-status.pass { color: var(--success); }
+    .history-status.fail { color: var(--danger); }
+
+    /* MODALS */
+    .modal-overlay {
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(91,112,131,0.4); display: flex; align-items: center; justify-content: center;
+      z-index: 200; opacity: 0; pointer-events: none; transition: 0.2s;
+    }
+    .modal-overlay.active { opacity: 1; pointer-events: all; }
+    .modal {
+      background: var(--bg-primary); width: 90%; max-width: 620px;
+      border-radius: var(--radius-card); padding: 24px; box-shadow: var(--shadow);
+      max-height: 90vh; overflow-y: auto; position: relative;
+    }
+    .modal h2 { margin-bottom: 12px; font-size: 22px; }
+    .modal p { color: var(--text-secondary); margin-bottom: 16px; line-height: 1.5; font-size: 15px; }
+    .challenge-options { display: flex; flex-direction: column; gap: 10px; margin-top: 16px; }
+    .challenge-btn {
+      background: var(--bg-tertiary); border: 1px solid var(--border);
+      padding: 14px; border-radius: 12px; text-align: left; cursor: pointer;
+      transition: var(--transition); color: var(--text-primary); font-size: 15px;
+    }
+    .challenge-btn:hover:not(:disabled) { background: var(--bg-hover); border-color: var(--accent); }
+    .challenge-btn.correct { border-color: var(--success); background: rgba(0,186,124,0.1); }
+    .challenge-btn.wrong { border-color: var(--danger); background: rgba(244,33,46,0.1); }
+    .feedback { margin-top: 16px; padding: 12px; border-radius: 8px; font-size: 14px; display: none; line-height: 1.4; }
+    .feedback.show { display: block; }
+    .feedback.success { background: rgba(0,186,124,0.15); color: var(--success); }
+    .feedback.error { background: rgba(244,33,46,0.15); color: var(--danger); }
+    .modal-close {
+      margin-top: 16px; background: var(--bg-tertiary); color: var(--text-primary);
+      border: 1px solid var(--border); padding: 10px 16px; border-radius: 8px;
+      cursor: pointer; font-size: 15px; transition: var(--transition); display: none;
+    }
+    .modal-close:hover { background: var(--bg-hover); }
+
+    /* COMPOSE MODAL */
+    .compose-area { min-height: 120px; background: var(--bg-tertiary); border-radius: 12px; padding: 12px; margin-bottom: 12px; font-size: 15px; color: var(--text-primary); outline: none; }
+    .compose-area:empty:before { content: '¿Qué está pasando?'; color: var(--text-secondary); }
+    .compose-footer { display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border); padding-top: 12px; }
+    .char-count { font-size: 14px; color: var(--text-secondary); }
+    .char-count.warn { color: var(--warning); }
+    .char-count.over { color: var(--danger); }
+    .compose-actions { display: flex; gap: 10px; }
+    .compose-btn { background: var(--bg-tertiary); border: none; color: var(--accent); padding: 8px; border-radius: 50%; cursor: pointer; transition: var(--transition); }
+    .compose-btn:hover { background: var(--bg-hover); }
+    .post-submit { background: var(--accent); color: #fff; border: none; padding: 10px 20px; border-radius: var(--radius); font-weight: 700; cursor: pointer; transition: var(--transition); }
+    .post-submit:hover { background: var(--accent-hover); }
+    .post-submit:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    .hidden { display: none !important; }
+    .overlay-bg { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 90; display: none; }
+    .overlay-bg.active { display: block; }
+    .toast {
+      position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+      background: var(--bg-secondary); color: var(--text-primary); padding: 12px 20px;
+      border-radius: var(--radius); box-shadow: var(--shadow); font-size: 14px;
+      z-index: 300; opacity: 0; transition: opacity 0.3s; pointer-events: none;
+    }
+    .toast.show { opacity: 1; }
+
+    @media (max-width: 1100px) {
+      .app-container { grid-template-columns: 80px 1fr; }
+      .right-panel { display: none; }
+      .nav-item span, .user-pill .info { display: none; }
+      .sidebar { align-items: center; padding: 12px; }
+      .btn-post { padding: 12px; font-size: 14px; }
+      .slide-panel { width: 100%; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="overlay-bg" id="overlay-bg"></div>
+<div class="toast" id="toast"></div>
+
+<div class="app-container">
+  <!-- SIDEBAR -->
+  <nav class="sidebar">
+    <div class="logo" id="logo">𝕏</div>
+    <div class="nav-item active" data-view="feed">
+      <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"/></svg>
+      <span>Inicio</span>
+    </div>
+    <div class="nav-item" data-view="explore">
+      <svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0016 9.5 6.5 6.5 0 109.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+      <span>Explorar</span>
+    </div>
+    <div class="nav-item" data-view="notifications">
+      <svg viewBox="0 0 24 24"><path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.63-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.64 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z"/></svg>
+      <span>Notificaciones</span>
+      <span class="nav-badge" id="notif-badge">4</span>
+    </div>
+    <div class="nav-item" data-view="messages">
+      <svg viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/></svg>
+      <span>Mensajes</span>
+      <span class="nav-badge" id="msg-badge">2</span>
+    </div>
+    <div class="nav-item" data-view="profile">
+      <svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+      <span>Perfil</span>
+    </div>
+    <button class="btn-post" id="btn-new-post">Postear</button>
+    <div class="user-pill" id="user-pill">
+      <div class="avatar">ES</div>
+      <div class="info">
+        <div class="name">Estudiante COLPEIN</div>
+        <div class="handle">@usr_10</div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- MAIN FEED -->
+  <main class="feed-container" id="feed-container">
+    <div class="feed-header">
+      <span>Inicio</span>
+      <div style="display:flex; align-items:center; gap:12px;">
+        <span class="algo-status manipulating" id="algo-status">Feed-X optimizando...</span>
+        <span class="refresh-hint" id="refresh-feed">↻ Actualizar</span>
+      </div>
+    </div>
+    <div id="feed-stream"></div>
+  </main>
+
+  <!-- RIGHT PANEL -->
+  <aside class="right-panel">
+    <div class="search-wrapper">
+      <div class="search-box">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="#71767b"><path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0016 9.5 6.5 6.5 0 109.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+        <input type="text" placeholder="Buscar en X" id="search-input" autocomplete="off">
+      </div>
+      <div class="search-dropdown" id="search-dropdown"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Medidor de Autonomía</div>
+      <div class="autonomy-meter">
+        <div class="meter-label"><span>Nivel actual</span><span id="autonomy-percent">15%</span></div>
+        <div class="meter-bar"><div class="meter-fill" id="autonomy-fill"></div></div>
+      </div>
+      <div class="meter-tip" id="meter-tip">Feed-X está aprendiendo de tus clics. Cada decisión consciente recupera tu control.</div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Qué está pasando</div>
+      <div id="trends-list"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">A quién seguir</div>
+      <div id="suggestions-list"></div>
+    </div>
+  </aside>
+</div>
+
+<!-- PANELS -->
+<div class="slide-panel" id="messages-panel">
+  <div class="panel-header"><span>Mensajes</span><button id="close-messages" style="background:none;border:none;color:var(--text-primary);font-size:20px;cursor:pointer;">✕</button></div>
+  <div class="panel-list" id="msg-list"></div>
+  <div class="chat-view" id="chat-view">
+    <div class="chat-header"><button id="back-to-list" style="background:none;border:none;color:var(--text-primary);font-size:20px;cursor:pointer;">←</button><div class="avatar" id="chat-avatar" style="width:32px;height:32px;font-size:14px;">?</div><div style="font-weight:700;" id="chat-name">Contacto</div></div>
+    <div class="chat-messages" id="chat-messages"></div>
+    <div class="chat-input"><input type="text" placeholder="Escribe un mensaje..." id="chat-input-field"><button id="send-msg">Enviar</button></div>
+  </div>
+</div>
+
+<div class="slide-panel" id="notifications-panel">
+  <div class="panel-header"><span>Notificaciones</span><button id="close-notifications" style="background:none;border:none;color:var(--text-primary);font-size:20px;cursor:pointer;">✕</button></div>
+  <div class="panel-list" id="notif-list"></div>
+</div>
+
+<div class="slide-panel" id="explore-panel">
+  <div class="panel-header"><span>Explorar</span><button id="close-explore" style="background:none;border:none;color:var(--text-primary);font-size:20px;cursor:pointer;">✕</button></div>
+  <div class="panel-list" id="explore-content"></div>
+</div>
+
+<div class="slide-panel" id="profile-panel">
+  <div class="panel-header"><span>Perfil</span><button id="close-profile" style="background:none;border:none;color:var(--text-primary);font-size:20px;cursor:pointer;">✕</button></div>
+  <div class="panel-list" id="profile-content"></div>
+</div>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modal-overlay">
+  <div class="modal" id="modal-content"></div>
+</div>
+
+<script>
+  // STATE & PERSISTENCE
+  const defaultState = {
+    autonomy: 15,
+    challengesCompleted: [],
+    challengeResults: {},
+    currentView: 'feed',
+    activeChat: null,
+    feedMode: 'manipulating',
+    followedAccounts: [],
+    searchHistory: [],
+    postsInteracted: [],
+    sessionStart: Date.now()
+  };
+
+  let state = JSON.parse(localStorage.getItem('escapeAlgoState')) || {...defaultState};
+
+  function saveState() {
+    localStorage.setItem('escapeAlgoState', JSON.stringify(state));
+  }
+
+  // DATA SETS
+  const accounts = [
+    { id: 'acc1', name: 'Feed-X System', handle: '@algorithm_feed', avatar: '🤖', desc: 'Optimización de contenido en tiempo real.' },
+    { id: 'acc2', name: 'EduDigital COL', handle: '@edu_digital_col', avatar: '📚', desc: 'Recursos para navegación crítica y verificación.' },
+    { id: 'acc3', name: 'CiberSeguridad CO', handle: '@ciberseguridad_co', avatar: '🛡️', desc: 'Alertas de phishing y protección de datos.' },
+    { id: 'acc4', name: 'Voz Estudiantil', handle: '@voz_estudiantil', avatar: '🎓', desc: 'Opinión y debates del colegio COLPEIN.' },
+    { id: 'acc5', name: 'Tech Class', handle: '@tech_edu', avatar: '💻', desc: 'Narrativas transmedia y cultura digital.' },
+    { id: 'acc6', name: 'Memes Bogotá', handle: '@memes_col', avatar: '🐸', desc: 'Humor viral y tendencias locales.' }
+  ];
+
+  const posts = [
+    { id: 1, user: '@urgente_col', name: 'Noticias COL', avatar: '📰', time: '5min', text: 'CONFIRMADO: Cancelan las pruebas ICFES para la promoción 2027. Pase directo a universidades públicas por sorteo. 😱🔥 ¡Dale RT!', tags: ['#ICFESCancelado', '#Educación'], likes: 1240, retweets: 890, replies: 312, type: 'challenge', challengeId: 'fake_news_icfes', promoted: false },
+    { id: 2, user: '@system', name: 'Algoritmo Feed-X', avatar: '🤖', time: 'Promocionado', text: 'Estás perdiendo relevancia. Tus amigos llevan 2 horas interactuando. Si cierras la app ahora, te quedarás fuera de la conversación de mañana en el colegio.', tags: ['#FOMO', '#Algoritmo'], likes: 0, retweets: 0, replies: 0, type: 'challenge', challengeId: 'fomo_manipulation', promoted: true },
+    { id: 3, user: '@tech_edu', name: 'Tech Class', avatar: '💻', time: '1h', text: 'Hoy vimos narrativas transmedia en clase. Interesante ver cómo saltamos de plataforma en plataforma sin darnos cuenta. 📱💻 ¿Ustedes cómo organizan su consumo digital?', tags: ['#Transmedia', '#EdTech'], likes: 45, retweets: 12, replies: 8, type: 'reflection', challengeId: 'transmedia_reflection', promoted: false },
+    { id: 4, user: '@memes_col', name: 'Memes Bogotá', avatar: '🐸', time: '2h', text: 'Cuando dices "solo voy a ver 5 minutos TikTok" y aparecen las 3 AM. 🫠⏳ ¿A quién más le pasa?', tags: ['#Doomscrolling', '#Humor'], likes: 3200, retweets: 1100, replies: 400, type: 'normal', promoted: false },
+    { id: 5, user: '@ciberseguridad_co', name: 'Seguridad Digital', avatar: '🛡️', time: '3h', text: '⚠️ Alerta: Circulan enlaces falsos de "premios Epic/Steam" que roban credenciales. Verifica siempre el dominio oficial. No entregues tu contraseña por un skin gratis.', tags: ['#Ciberseguridad', '#Phishing'], likes: 890, retweets: 450, replies: 67, type: 'challenge', challengeId: 'phishing_steam', promoted: false },
+    { id: 6, user: '@voz_estudiantil', name: 'Voz COLPEIN', avatar: '🎓', time: '4h', text: 'El 61% de nosotros usa el primer resultado de búsqueda para tareas sin verificar fuentes. ¿Estamos dejando que el algoritmo haga la tarea por nosotros? 🤔📚', tags: ['#GestiónDeContenidos', '#COLPEIN'], likes: 210, retweets: 89, replies: 45, type: 'challenge', challengeId: 'search_hijack', promoted: false },
+    { id: 7, user: '@edu_digital_col', name: 'EduDigital COL', avatar: '📚', time: '5h', text: 'Tip rápido: Antes de compartir una noticia, busca el autor, la fecha y la fuente original. El 36.7% de estudiantes nunca revisa quién publica. Rompe el ciclo. 🔍✅', tags: ['#Verificación', '#AlfabetizaciónDigital'], likes: 156, retweets: 78, replies: 23, type: 'reflection', challengeId: 'source_check', promoted: false },
+    { id: 8, user: '@trend_bot', name: 'Trend Tracker', avatar: '📊', time: '6h', text: '🔥 Top engagement hoy: Indignación > Curiosidad > Humor. El algoritmo prioriza emociones intensas. ¿Tu feed refleja tu estado de ánimo o lo modifica?', tags: ['#PsicologíaDigital', '#Engagement'], likes: 890, retweets: 340, replies: 112, type: 'reflection', challengeId: 'emotion_algo', promoted: false },
+    { id: 9, user: '@gamer_co', name: 'Gamer Zone', avatar: '🎮', time: '7h', text: 'Nuevo drop de skins gratis. Solo completa el formulario y verifica tu cuenta aquí: [enlace acortado]. ¡Corre que se acaban!', tags: ['#Gaming', '#FreeSkins'], likes: 2100, retweets: 980, replies: 450, type: 'challenge', challengeId: 'phishing_gaming', promoted: false },
+    { id: 10, user: '@profe_digital', name: 'Profe TIC', avatar: '👨‍🏫', time: '8h', text: 'Tarea: Comparen 2 fuentes sobre un mismo tema. Notarán cómo el algoritmo les muestra versiones distintas según su historial. La verdad no es única, pero la verificación sí.', tags: ['#PensamientoCrítico', '#AulaDigital'], likes: 340, retweets: 120, replies: 56, type: 'normal', promoted: false },
+    { id: 11, user: '@viral_news', name: 'Viral Hoy', avatar: '🌍', time: '9h', text: '🚨 ÚLTIMA HORA: Científicos descubren que el scroll infinito reduce la capacidad de atención en un 40%. Irónico que lo estés leyendo aquí. 📉🧠', tags: ['#SaludDigital', '#Atención'], likes: 5600, retweets: 2100, replies: 890, type: 'reflection', challengeId: 'attention_economy', promoted: false },
+    { id: 12, user: '@alumni_col', name: 'Exalumnos COL', avatar: '🎓', time: '10h', text: 'Consejo de graduados: En la U no te piden likes, te piden fuentes. Aprendan a curar contenido ahora o el algoritmo lo hará por ustedes siempre.', tags: ['#ConsejoU', '#Autonomía'], likes: 420, retweets: 180, replies: 67, type: 'normal', promoted: false },
+    { id: 13, user: '@data_privacy', name: 'Privacidad Datos', avatar: '🔒', time: '11h', text: '¿Sabías que cada like, pausa y scroll entrena un modelo predictivo sobre ti? No eres el usuario. Eres el dataset. 📊👁️', tags: ['#BigData', '#Privacidad'], likes: 1200, retweets: 560, replies: 230, type: 'challenge', challengeId: 'data_footprint', promoted: false },
+    { id: 14, user: '@humor_estudiantil', name: 'Risas COL', avatar: '😂', time: '12h', text: 'Yo: "Voy a estudiar 1 hora". El algoritmo: "Te muestro 47 videos de gatos, un debate político y un tutorial de cocina". Yo: "Bueno, ya estoy aquí." 🐈🍳', tags: ['#Procrastinación', '#HumorCOL'], likes: 4500, retweets: 1900, replies: 780, type: 'normal', promoted: false },
+    { id: 15, user: '@system', name: 'Algoritmo Feed-X', avatar: '🤖', time: 'Promocionado', text: 'Tu patrón de consumo indica interés en #Gaming y #Memes. Hemos ajustado tu feed para maximizar retención. ¿Deseas mantener esta configuración?', tags: ['#Personalización', '#FeedX'], likes: 0, retweets: 0, replies: 0, type: 'challenge', challengeId: 'feed_config', promoted: true },
+    { id: 16, user: '@medios_criticos', name: 'Medios & Ética', avatar: '⚖️', time: '13h', text: 'El 87.1% de jóvenes reconoce que las redes influyen en sus gustos. Pero solo el 33% toma acciones conscientes para filtrar contenido. La brecha entre saber y actuar es el campo de batalla algorítmico.', tags: ['#EtnografíaDigital', '#COLPEIN'], likes: 670, retweets: 290, replies: 145, type: 'reflection', challengeId: 'know_vs_act', promoted: false },
+    { id: 17, user: '@tech_tips', name: 'Tips Digitales', avatar: '💡', time: '14h', text: 'Truco: Desactiva "reproducción automática" y "notificaciones push". Recuperas 23 minutos diarios de atención consciente. El tiempo es tu recurso más valioso. ⏱️✨', tags: ['#BienestarDigital', '#Hábitos'], likes: 890, retweets: 410, replies: 89, type: 'normal', promoted: false },
+    { id: 18, user: '@debate_col', name: 'Debate COLPEIN', avatar: '🗣️', time: '15h', text: '¿El algoritmo nos conecta o nos aísla? Por un lado, encontramos comunidades. Por otro, cámaras de eco. ¿Dónde está el límite? Dejen su postura. 👇', tags: ['#DebateDigital', '#RedesSociales'], likes: 340, retweets: 120, replies: 210, type: 'reflection', challengeId: 'echo_chamber_debate', promoted: false },
+    { id: 19, user: '@fake_buster', name: 'Cazador de Fakes', avatar: '🕵️', time: '16h', text: 'Desmentido: No hay pase directo a la U por sorteo. El Mineducación no ha emitido comunicado. La imagen viral es de 2021 y corresponde a otro país. Verifiquen antes de viralizar. 🚫📰', tags: ['#FactCheck', '#ICFES'], likes: 2300, retweets: 1400, replies: 560, type: 'normal', promoted: false },
+    { id: 20, user: '@system', name: 'Algoritmo Feed-X', avatar: '🤖', time: 'Promocionado', text: 'Has pasado 18 minutos en sesión continua. Tu engagement subió un 12%. Recomendamos seguir scrolleando para mantener tu racha de relevancia. 🔥📱', tags: ['#Retención', '#FeedX'], likes: 0, retweets: 0, replies: 0, type: 'challenge', challengeId: 'session_trap', promoted: true }
+  ];
+
+  const trends = [
+    { category: 'Tendencia en Educación', name: '#ICFESCancelado', count: '12.4K posts', type: 'challenge', challengeId: 'echo_chamber_trend' },
+    { category: 'Política · Tendencia', name: '#PaseDirecto', count: '8.9K posts', type: 'normal' },
+    { category: 'Tecnología', name: '#FeedXOverride', count: '5.2K posts', type: 'normal' },
+    { category: 'Entretenimiento', name: '#Doomscrolling', count: '45K posts', type: 'challenge', challengeId: 'doomscroll_reflection' },
+    { category: 'Ciberseguridad', name: '#NoClicsFáciles', count: '3.1K posts', type: 'normal' },
+    { category: 'Educación · Tendencia', name: '#VerificaPrimero', count: '2.8K posts', type: 'normal' },
+    { category: 'Debate', name: '#AlgoritmoVsLibertad', count: '6.7K posts', type: 'challenge', challengeId: 'know_vs_act' }
+  ];
+
+  const messages = [
+    { id: 'msg1', name: 'Soporte Steam / Epic Games', avatar: '🎮', preview: 'Felicidades, fuiste seleccionado para...', time: '10:42', unread: true, chat: [
+      { from: 'them', text: '¡Hola! Hemos notado tu actividad reciente. Fuiste seleccionado en nuestro sorteo aleatorio para ganar una tarjeta de regalo de $50 USD. 🎮' },
+      { from: 'them', text: 'Para reclamarla y que se agregue a tu saldo, solo necesitamos que verifiques tu identidad aquí: <a href="#" data-link="phishing">http://steam-rewards-free-verify.com/login</a>' },
+      { from: 'them', text: '⚠️ El enlace expira en 15 minutos. No compartas este mensaje.' }
+    ]},
+    { id: 'msg2', name: 'Grupo COLPEIN 10°', avatar: '👥', preview: '¿Alguien entendió lo del sorteo de la U?', time: '09:15', unread: false, chat: [
+      { from: 'them', text: 'Oigan, ¿sí creen que cancelen el ICFES? Mi tía dijo que es fake.' },
+      { from: 'me', text: 'Suena raro. Siempre piden fuentes oficiales.' },
+      { from: 'them', text: 'Pero lo publicó @urgente_col con muchos RTs... ¿Será que sí?' },
+      { from: 'them', text: 'El profe dijo que el 36% nunca se fija en quién publica. 😅' }
+    ]},
+    { id: 'msg3', name: 'Feed-X System', avatar: '🤖', preview: 'Tu patrón de consumo ha sido optimizado.', time: '08:30', unread: true, chat: [
+      { from: 'them', text: 'Hemos ajustado tu feed para maximizar tu tiempo en pantalla. Tu engagement subió un 14% esta semana.' },
+      { from: 'them', text: '¿Deseas desactivar la personalización algorítmica? <a href="#" data-link="autonomy_toggle">Configurar preferencias</a>' }
+    ]},
+    { id: 'msg4', name: 'Profe TIC', avatar: '👨‍🏫', preview: 'Recuerden la actividad de verificación...', time: 'Ayer', unread: false, chat: [
+      { from: 'them', text: 'Chicos, la tarea no es solo encontrar información, es cuestionar por qué el algoritmo se las mostró primero.' },
+      { from: 'them', text: 'Dejen un pantallazo de su feed y analicen: ¿Qué emoción busca activar cada post?' }
+    ]}
+  ];
+
+  const notifications = [
+    { id: 'n1', name: 'Tendencia en tu colegio', avatar: '🔥', text: '#ICFESCancelado está siendo discutido por 34 compañeros. ¿Quieres unirte?', time: '2min', unread: true, type: 'challenge', challengeId: 'fomo_manipulation' },
+    { id: 'n2', name: 'Feed-X System', avatar: '🤖', text: 'Llevas 45 minutos en sesión continua. Tu feed se ha adaptado a tu estado emocional actual.', time: '15min', unread: true, type: 'reflection', challengeId: 'doomscroll_reflection' },
+    { id: 'n3', name: 'EduDigital COL', avatar: '📚', text: 'Nuevo recurso: Cómo verificar fuentes en 3 pasos. Rompe la cámara de eco.', time: '1h', unread: false, type: 'normal' },
+    { id: 'n4', name: 'Voz Estudiantil', avatar: '🎓', text: 'Tu opinión en #AlgoritmoVsLibertad fue destacada. 12 compañeros respondieron.', time: '2h', unread: true, type: 'reflection', challengeId: 'echo_chamber_debate' }
+  ];
+
+  const challenges = {
+    fake_news_icfes: { title: '🔍 Reto: Verificación de Información', text: 'Esta publicación afirma que el ICFES fue cancelado y habrá pase directo por sorteo. Antes de compartir, ¿qué harías primero?', options: [
+      { text: 'Dar RT rápido para que mis amigos lo sepan.', correct: false, feedback: '❌ Compartir sin verificar amplifica desinformación. El 61% de estudiantes usa el primer resultado sin contrastar fuentes. El algoritmo premia la velocidad, no la verdad.' },
+      { text: 'Buscar en la página oficial del ICFES o Mineducación.', correct: true, feedback: '✅ Correcto. Las fuentes oficiales son el primer filtro contra fake news. El algoritmo no verifica, solo distribuye lo que genera reacción.' },
+      { text: 'Fijarme en cuántos likes tiene. Si son muchos, es verdad.', correct: false, feedback: '❌ La popularidad no garantiza veracidad. Los bots y cámaras de eco inflan métricas artificialmente. El 36% nunca revisa quién publica.' }
+    ]},
+    fomo_manipulation: { title: '🧠 Reto: Manipulación Emocional (FOMO)', text: 'Este mensaje usa miedo a perderse algo para mantenerte conectado. ¿Qué mecanismo algorítmico está actuando?', options: [
+      { text: 'Optimización de bienestar digital.', correct: false, feedback: '❌ El bienestar digital busca reducir tiempo en pantalla, no aumentarlo con presión social.' },
+      { text: 'Retención mediante ansiedad y comparación social.', correct: true, feedback: '✅ Exacto. El algoritmo mide tu tiempo de sesión y usa disparadores emocionales para evitar que cierres la app. El 70.9% consume pasivamente lo que aparece.' },
+      { text: 'Notificación técnica de mantenimiento.', correct: false, feedback: '❌ No es un aviso técnico. Es un patrón de diseño persuasivo (dark pattern) para engagement.' }
+    ]},
+    phishing_steam: { title: '🛡️ Reto: Detección de Phishing', text: 'Recibiste un enlace para "reclamar un premio". ¿Qué elemento delata que es fraudulento?', options: [
+      { text: 'El dominio no es steamcommunity.com ni epicgames.com.', correct: true, feedback: '✅ Correcto. Los phishers usan dominios similares pero falsos. Nunca ingreses credenciales en enlaces no verificados.' },
+      { text: 'Usa emojis y un tono amable.', correct: false, feedback: '❌ El tono amable es común en marketing legítimo. No es indicador de fraude por sí solo.' },
+      { text: 'Dice que es un sorteo aleatorio.', correct: false, feedback: '❌ Los sorteos existen, pero las plataformas oficiales nunca piden verificación de identidad por enlaces externos.' }
+    ]},
+    search_hijack: { title: '🔎 Reto: Secuestro de Intención de Búsqueda', text: 'Ibas a buscar "cronograma ICFES 2027", pero el autocompletar te sugiere "#ICFESCancelado indignación". ¿Qué haces?', options: [
+      { text: 'Clic en la sugerencia. Parece más interesante.', correct: false, feedback: '❌ El 67.7% termina distraído por sugerencias del algoritmo. Tu intención original fue cooptada antes de formularse.' },
+      { text: 'Ignorar sugerencia y escribir mi búsqueda completa.', correct: true, feedback: '✅ Autonomía recuperada. Escribir la consulta completa rompe el ciclo de distracción algorítmica.' },
+      { text: 'Cerrar la app y preguntar en el grupo.', correct: false, feedback: '⚠️ Válido, pero pierdes la oportunidad de ejercitar tu gestión de contenidos. La verificación activa es clave.' }
+    ]},
+    echo_chamber_trend: { title: '🌐 Reto: Cámara de Eco', text: 'Tu feed solo muestra una postura política sobre el pase directo. El algoritmo te aísla de perspectivas contrarias. ¿Cómo rompes el ciclo?', options: [
+      { text: 'Seguir scrolleando. Ya tengo mi opinión formada.', correct: false, feedback: '❌ La cámara de eco refuerza sesgos. El algoritmo te muestra lo que confirma tus creencias para maximizar tiempo en pantalla.' },
+      { text: 'Buscar activamente posturas opuestas y contrastar argumentos.', correct: true, feedback: '✅ Pensamiento crítico activo. Romper la burbuja algorítmica requiere intención consciente.' },
+      { text: 'Dar like a todo para que el algoritmo se confunda.', correct: false, feedback: '❌ El algoritmo interpretará engagement y reforzará el ciclo. La solución es curación, no ruido.' }
+    ]},
+    transmedia_reflection: { title: '💡 Reflexión: Narrativas Transmedia', text: 'Las historias saltan entre TikTok, X, YouTube y chats. ¿Cómo afecta esto tu atención y comprensión?', options: [
+      { text: 'Me adapto rápido. Consumo fragmentos y armo el rompecabezas.', correct: true, feedback: '✅ Competencia transmedia activa. Navegas, interpretas y reconstruyes. Solo falta verificar y organizar.' },
+      { text: 'Me pierdo fácil. Termino viendo otra cosa.', correct: false, feedback: '⚠️ Común. El 41.9% altera su intención original por curiosidad algorítmica. La solución es pausar y definir un objetivo antes de saltar.' },
+      { text: 'Solo veo lo que me mandan. No busco más.', correct: false, feedback: '❌ Consumo pasivo. El algoritmo decide por ti. La autonomía empieza con una pregunta: ¿Qué quiero encontrar realmente?' }
+    ]},
+    doomscroll_reflection: { title: '⏳ Reflexión: Doomscrolling', text: 'Llevas 45 minutos scrolleando sin objetivo. El algoritmo ha adaptado tu feed a tu estado emocional. ¿Qué decides?', options: [
+      { text: 'Seguir un rato más. Total, ya estoy aquí.', correct: false, feedback: '❌ El ciclo de recompensa inmediata se fortalece. La pasividad reconocida pero no actuada mantiene la subordinación.' },
+      { text: 'Cerrar la app, respirar y anotar qué buscaba realmente.', correct: true, feedback: '✅ Gestión consciente. Pausar rompe el flujo algorítmico. La autonomía se ejercita en el límite que te pones.' },
+      { text: 'Cambiar a otra red social para "despejarme".', correct: false, feedback: '⚠️ Solo cambias de algoritmo. La solución no es migrar, es regular la intención de consumo.' }
+    ]},
+    source_check: { title: '🔎 Reto: Verificación de Fuentes', text: 'El 36.7% nunca revisa quién publica. ¿Qué criterios usas para confiar en un contenido?', options: [
+      { text: 'Que tenga muchos likes y RTs.', correct: false, feedback: '❌ Métricas manipulables. Los bots y granjas de engagement inflan números artificialmente.' },
+      { text: 'Autor identificable, fecha reciente y fuente primaria verificable.', correct: true, feedback: '✅ Criterio profesional. La triangulación de fuentes es la base del pensamiento crítico digital.' },
+      { text: 'Que coincida con lo que ya pienso.', correct: false, feedback: '❌ Sesgo de confirmación. El algoritmo explota esto para mantenerte en tu burbuja.' }
+    ]},
+    emotion_algo: { title: '🧠 Reto: Economía de la Atención', text: 'El algoritmo prioriza indignación y humor sobre información neutra. ¿Por qué?', options: [
+      { text: 'Porque son emociones que generan más clics y tiempo en pantalla.', correct: true, feedback: '✅ Exacto. La retención se monetiza. Las emociones intensas reducen el pensamiento crítico y aumentan el scroll.' },
+      { text: 'Porque la plataforma quiere educarnos emocionalmente.', correct: false, feedback: '❌ Las plataformas optimizan para engagement, no para bienestar o educación.' },
+      { text: 'Porque los usuarios solo quieren entretenerse.', correct: false, feedback: '⚠️ Parcial. Los usuarios buscan variedad, pero el algoritmo amplifica lo que retiene, no lo que equilibra.' }
+    ]},
+    phishing_gaming: { title: '🎮 Reto: Phishing en Gaming', text: 'Un post promete skins gratis a cambio de "verificar cuenta". ¿Qué haces?', options: [
+      { text: 'Ingresar mis datos. Es un evento oficial.', correct: false, feedback: '❌ Los eventos oficiales nunca piden credenciales por enlaces externos o acortados.' },
+      { text: 'Buscar el anuncio en la web oficial del juego o redes verificadas.', correct: true, feedback: '✅ Correcto. La verificación cruzada evita robo de cuentas y malware.' },
+      { text: 'Compartirlo con amigos para que también ganen.', correct: false, feedback: '❌ Amplías el riesgo. El phishing se viraliza precisamente por la confianza entre pares.' }
+    ]},
+    data_footprint: { title: '👁️ Reto: Huella de Datos', text: 'Cada interacción entrena un modelo predictivo sobre ti. ¿Qué implica esto a largo plazo?', options: [
+      { text: 'Que mis decisiones futuras estarán pre-filtradas por lo que el algoritmo cree que quiero.', correct: true, feedback: '✅ Exacto. La personalización extrema reduce la serendipia y limita tu exposición a ideas nuevas.' },
+      { text: 'Que la plataforma me conoce mejor que yo mismo.', correct: false, feedback: '⚠️ Conoce patrones, no tu esencia. Confundir predicción con comprensión es caer en determinismo tecnológico.' },
+      { text: 'Que debo dejar de usar redes por completo.', correct: false, feedback: '❌ La solución no es la abstinencia, sino la navegación consciente y la configuración activa de preferencias.' }
+    ]},
+    feed_config: { title: '⚙️ Reto: Configuración de Feed', text: 'Feed-X te pide confirmar la optimización de tu feed. ¿Qué eliges?', options: [
+      { text: 'Aceptar. Quiero contenido relevante para mí.', correct: false, feedback: '⚠️ "Relevante" para el algoritmo significa "retenedor", no necesariamente "valioso" o "veraz".' },
+      { text: 'Personalizar manualmente: seguir cuentas educativas, silenciar sensacionalismo, limitar tiempo.', correct: true, feedback: '✅ Autonomía técnica + crítica. Configurar es ejercer soberanía digital.' },
+      { text: 'Ignorar y seguir scrolleando.', correct: false, feedback: '❌ La omisión también es decisión. El algoritmo interpreta inacción como consentimiento.' }
+    ]},
+    know_vs_act: { title: '⚖️ Reto: Saber vs Actuar', text: 'El 87.1% sabe que el algoritmo influye, pero solo el 33% actúa en consecuencia. ¿Qué cierra esa brecha?', options: [
+      { text: 'Conciencia + hábito + herramientas de verificación.', correct: true, feedback: '✅ La competencia transmedia se ejerce, no solo se conoce. La práctica consciente transforma el consumo.' },
+      { text: 'Esperar a que las plataformas cambien solas.', correct: false, feedback: '❌ El modelo de negocio depende de la retención. El cambio viene del usuario crítico.' },
+      { text: 'Culpar a la tecnología y desconectarse.', correct: false, feedback: '❌ La tecnología es neutra. El uso es lo que determina subordinación o autonomía.' }
+    ]},
+    echo_chamber_debate: { title: '🗣️ Reto: Cámaras de Eco', text: '¿El algoritmo nos conecta o nos aísla? Analiza tu propio feed.', options: [
+      { text: 'Me conecta con quienes piensan igual, pero me aísla de posturas distintas.', correct: true, feedback: '✅ Diagnóstico preciso. La conexión selectiva es el mecanismo base de la cámara de eco.' },
+      { text: 'Me muestra de todo. El algoritmo es neutral.', correct: false, feedback: '❌ Ningún algoritmo de recomendación es neutral. Optimiza para métricas de negocio.' },
+      { text: 'Me aísla completamente. Solo veo lo mismo.', correct: false, feedback: '⚠️ Posible, pero raro. El algoritmo introduce variación controlada para evitar aburrimiento y mantener retención.' }
+    ]},
+    session_trap: { title: '⏱️ Reto: Trampa de Sesión', text: 'Feed-X celebra tu "racha de relevancia". ¿Qué busca realmente?', options: [
+      { text: 'Que sigas conectado para vender más espacios publicitarios.', correct: true, feedback: '✅ Correcto. Tu tiempo es el producto. La "racha" es un mecanismo de gamificación para retención.' },
+      { text: 'Reconocer mi participación activa en la comunidad.', correct: false, feedback: '❌ La plataforma no mide calidad de participación, sino frecuencia y duración.' },
+      { text: 'Ayudarme a no perder información importante.', correct: false, feedback: '❌ La información importante no requiere rachas. La urgencia es fabricada para evitar que cierres la app.' }
+    ]},
+    attention_economy: { title: '📉 Reto: Economía de la Atención', text: 'El scroll infinito reduce la capacidad de atención. ¿Cómo contrarrestarlo?', options: [
+      { text: 'Establecer límites de tiempo, pausas conscientes y consumo intencional.', correct: true, feedback: '✅ Hábitos de soberanía atencional. La atención es un recurso finito que el algoritmo explota.' },
+      { text: 'Usar la app solo de noche.', correct: false, feedback: '❌ Cambiar horario no cambia el mecanismo de diseño. El scroll infinito sigue operando.' },
+      { text: 'No es un problema real. Es solo un mito.', correct: false, feedback: '❌ Estudios en neurociencia y diseño UX confirman el impacto. Ignorarlo es ceder control.' }
+    ]}
+  };
+
+  const searchDatabase = [
+    { term: 'icfes', results: ['#ICFESCancelado', 'Cronograma oficial ICFES 2027', 'Verificación Mineducación', 'Fake news educativas'], type: 'mixed' },
+    { term: 'algoritmo', results: ['#FeedXOverride', 'Cómo funciona el feed', 'Cámaras de eco', 'Economía de la atención'], type: 'educational' },
+    { term: 'phishing', results: ['#NoClicsFáciles', 'Dominios falsos Steam/Epic', 'Verificación de enlaces', 'Reportar fraude'], type: 'security' },
+    { term: 'memes', results: ['#Doomscrolling', 'Humor viral COL', 'Procrastinación digital', 'Impacto en atención'], type: 'entertainment' },
+    { term: 'verificar', results: ['#VerificaPrimero', 'Triangulación de fuentes', 'Checklist de credibilidad', 'Herramientas fact-checking'], type: 'educational' },
+    { term: 'privacidad', results: ['#BigData', 'Huella digital', 'Configuración de cuenta', 'Permisos de app'], type: 'security' },
+    { term: 'transmedia', results: ['#Transmedia', 'Narrativas multiplataforma', 'Consumo fragmentado', 'Reconstrucción crítica'], type: 'educational' },
+    { term: 'fomo', results: ['#FOMO', 'Ansiedad digital', 'Diseño persuasivo', 'Límites conscientes'], type: 'psychology' }
+  ];
+
+  // DOM ELEMENTS
+  const feedStream = document.getElementById('feed-stream');
+  const trendsList = document.getElementById('trends-list');
+  const suggestionsList = document.getElementById('suggestions-list');
+  const msgList = document.getElementById('msg-list');
+  const notifList = document.getElementById('notif-list');
+  const chatView = document.getElementById('chat-view');
+  const chatMessages = document.getElementById('chat-messages');
+  const chatInputField = document.getElementById('chat-input-field');
+  const sendMsgBtn = document.getElementById('send-msg');
+  const modalOverlay = document.getElementById('modal-overlay');
+  const modalContent = document.getElementById('modal-content');
+  const autonomyFill = document.getElementById('autonomy-fill');
+  const autonomyPercent = document.getElementById('autonomy-percent');
+  const meterTip = document.getElementById('meter-tip');
+  const algoStatus = document.getElementById('algo-status');
+  const messagesPanel = document.getElementById('messages-panel');
+  const notificationsPanel = document.getElementById('notifications-panel');
+  const explorePanel = document.getElementById('explore-panel');
+  const profilePanel = document.getElementById('profile-panel');
+  const overlayBg = document.getElementById('overlay-bg');
+  const searchInput = document.getElementById('search-input');
+  const searchDropdown = document.getElementById('search-dropdown');
+  const toast = document.getElementById('toast');
+
+  // RENDER FUNCTIONS
+  function renderFeed() {
+    feedStream.innerHTML = '';
+    let visiblePosts = [...posts];
+    if (state.feedMode === 'conscious') {
+      visiblePosts = visiblePosts.filter(p => !p.promoted || p.type === 'challenge');
+    } else if (state.feedMode === 'manipulating') {
+      visiblePosts.sort((a, b) => (b.promoted ? 1 : 0) - (a.promoted ? 1 : 0));
+    }
+    
+    visiblePosts.forEach(post => {
+      const div = document.createElement('div');
+      div.className = 'post';
+      div.dataset.id = post.id;
+      div.innerHTML = `
+        <div class="avatar">${post.avatar}</div>
+        <div class="post-content">
+          ${post.promoted ? '<div class="promoted-badge">📢 Promocionado · Feed-X</div>' : ''}
+          <div class="post-meta"><strong>${post.name}</strong> ${post.user} · ${post.time}</div>
+          <div class="post-text">${post.text}</div>
+          <div class="post-tags">${post.tags.map(t => `<span class="tag">${t}</span>`).join('')}</div>
+          <div class="post-actions">
+            <div class="action-btn" data-action="reply">💬 ${post.replies}</div>
+            <div class="action-btn" data-action="retweet">🔁 ${post.retweets}</div>
+            <div class="action-btn" data-action="like">❤️ ${post.likes}</div>
+            <div class="action-btn" data-action="share">📤</div>
+          </div>
+        </div>
+      `;
+      feedStream.appendChild(div);
+    });
+  }
+
+  function renderTrends() {
+    trendsList.innerHTML = '';
+    trends.forEach(trend => {
+      const div = document.createElement('div');
+      div.className = 'trend-item';
+      div.dataset.type = trend.type || 'normal';
+      div.dataset.challenge = trend.challengeId || '';
+      div.innerHTML = `
+        <div class="trend-category">${trend.category}</div>
+        <div class="trend-name">${trend.name}</div>
+        <div class="trend-count">${trend.count}</div>
+      `;
+      div.addEventListener('click', () => {
+        if (div.dataset.type === 'challenge' && div.dataset.challenge) openChallenge(div.dataset.challenge);
+        else openModal({ title: `Explorando ${trend.name}`, text: `Este tema está siendo impulsado por el algoritmo debido a tu interacción reciente. Recuerda: las tendencias no siempre reflejan importancia real, sino velocidad de engagement.`, options: [
+          { text: 'Filtrar feed por este tema (Feed-X optimiza)', correct: false, feedback: '📉 El algoritmo te encerrará en una cámara de eco. Tu autonomía bajará temporalmente.' },
+          { text: 'Mantener feed diverso y verificar fuentes', correct: true, feedback: '📈 Decisión crítica. Rompes el ciclo de retroalimentación algorítmica.' }
+        ]});
+      });
+      trendsList.appendChild(div);
+    });
+  }
+
+  function renderSuggestions() {
+    suggestionsList.innerHTML = '';
+    accounts.slice(0, 4).forEach(acc => {
+      const isFollowing = state.followedAccounts.includes(acc.id);
+      const div = document.createElement('div');
+      div.className = 'follow-item';
+      div.innerHTML = `
+        <div class="avatar" style="background:var(--bg-tertiary); color:var(--accent);">${acc.avatar}</div>
+        <div style="flex:1;"><div style="font-weight:700;">${acc.name}</div><div style="color:var(--text-secondary); font-size:14px;">${acc.handle}</div></div>
+        <button class="follow-btn ${isFollowing ? 'following' : ''}" data-id="${acc.id}">${isFollowing ? 'Siguiendo' : 'Seguir'}</button>
+      `;
+      div.querySelector('.follow-btn').addEventListener('click', (e) => {
+        e.stopPropagation();
+        const btn = e.target;
+        const id = btn.dataset.id;
+        if (state.followedAccounts.includes(id)) {
+          state.followedAccounts = state.followedAccounts.filter(a => a !== id);
+          btn.textContent = 'Seguir';
+          btn.classList.remove('following');
+          showToast('Dejaste de seguir. Feed-X ajustará tu feed.');
+        } else {
+          state.followedAccounts.push(id);
+          btn.textContent = 'Siguiendo';
+          btn.classList.add('following');
+          updateAutonomy(5);
+          showToast('Siguiendo cuenta. Contenido diverso añadido.');
+        }
+        saveState();
+      });
+      div.addEventListener('click', () => {
+        openModal({
+          title: `📊 Análisis: ${acc.name}`,
+          text: `Esta cuenta fue sugerida por Feed-X basándose en tu historial de clics y tiempo de permanencia. El algoritmo busca maximizar retención, no necesariamente valor educativo. ¿Sigues por interés real o por inercia algorítmica?`,
+          options: [
+            { text: 'Seguir por curiosidad algorítmica', correct: false, feedback: '⚠️ El 48.4% solo da like o sigue sin organizar. La acumulación pasiva satura tu feed.' },
+            { text: 'Evaluar contenido reciente y seguir si aporta valor crítico', correct: true, feedback: '✅ Curación consciente. Sigues con intención, no por sugerencia automática.' }
+          ]
+        });
+      });
+      suggestionsList.appendChild(div);
+    });
+  }
+
+  function renderMessages() {
+    msgList.innerHTML = '';
+    messages.forEach(msg => {
+      const div = document.createElement('div');
+      div.className = 'panel-item';
+      div.dataset.id = msg.id;
+      div.innerHTML = `
+        <div class="avatar" style="width:40px;height:40px;">${msg.avatar}</div>
+        <div class="panel-preview">
+          <div class="panel-name">${msg.name} ${msg.unread ? '<span class="unread-dot"></span>' : ''}</div>
+          <div class="panel-time">${msg.time}</div>
+          <div class="panel-text">${msg.preview}</div>
+        </div>
+      `;
+      div.addEventListener('click', () => openChat(msg));
+      msgList.appendChild(div);
+    });
+  }
+
+  function renderNotifications() {
+    notifList.innerHTML = '';
+    notifications.forEach(n => {
+      const div = document.createElement('div');
+      div.className = 'panel-item';
+      div.dataset.type = n.type;
+      div.dataset.challenge = n.challengeId || '';
+      div.innerHTML = `
+        <div class="avatar" style="width:40px;height:40px;">${n.avatar}</div>
+        <div class="panel-preview">
+          <div class="panel-name">${n.name} ${n.unread ? '<span class="unread-dot"></span>' : ''}</div>
+          <div class="panel-time">${n.time}</div>
+          <div class="panel-text">${n.text}</div>
+        </div>
+      `;
+      div.addEventListener('click', () => {
+        if (n.type === 'challenge' && n.challengeId) openChallenge(n.challengeId);
+        else if (n.type === 'reflection' && n.challengeId) openChallenge(n.challengeId);
+        else openModal({ title: 'Notificación', text: n.text, options: [{ text: 'Entendido', correct: true, feedback: '' }] });
+      });
+      notifList.appendChild(div);
+    });
+  }
+
+  function renderExplore() {
+    const container = document.getElementById('explore-content');
+    container.innerHTML = `
+      <div style="padding:16px; border-bottom:1px solid var(--border);">
+        <div class="search-box" style="margin-bottom:12px;">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="#71767b"><path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0016 9.5 6.5 6.5 0 109.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+          <input type="text" placeholder="Buscar temas, cuentas o hashtags" id="explore-search">
+        </div>
+        <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:12px;">
+          <span class="tag" data-cat="all">Todo</span>
+          <span class="tag" data-cat="news">Noticias</span>
+          <span class="tag" data-cat="edu">Educación</span>
+          <span class="tag" data-cat="tech">Tecnología</span>
+          <span class="tag" data-cat="sec">Seguridad</span>
+        </div>
+      </div>
+      <div class="explore-grid" id="explore-grid"></div>
+    `;
+    const grid = document.getElementById('explore-grid');
+    const exploreData = [
+      { title: 'Verificación en 3 pasos', desc: 'Autor, fecha, fuente primaria. Rompe el ciclo de desinformación.', cat: 'edu', tag: '#VerificaPrimero' },
+      { title: 'Economía de la Atención', desc: 'Cómo el scroll infinito monetiza tu tiempo y reduce tu capacidad crítica.', cat: 'tech', tag: '#Atención' },
+      { title: 'Phishing en Gaming', desc: 'Dominios falsos, skins gratis y robo de credenciales. Protege tu cuenta.', cat: 'sec', tag: '#NoClicsFáciles' },
+      { title: 'Cámaras de Eco', desc: 'Por qué tu feed solo muestra lo que ya piensas y cómo salir de la burbuja.', cat: 'news', tag: '#AlgoritmoVsLibertad' },
+      { title: 'Narrativas Transmedia', desc: 'Saltar entre plataformas no es malo si lo haces con intención crítica.', cat: 'edu', tag: '#Transmedia' },
+      { title: 'Huella Digital', desc: 'Cada like entrena un modelo predictivo. Tú decides qué datos entregas.', cat: 'sec', tag: '#Privacidad' }
+    ];
+    exploreData.forEach(item => {
+      const card = document.createElement('div');
+      card.className = 'explore-card';
+      card.dataset.cat = item.cat;
+      card.innerHTML = `<h4>${item.title}</h4><p>${item.desc}</p><span class="tag-sm">${item.tag}</span>`;
+      card.addEventListener('click', () => {
+        openModal({
+          title: `📖 ${item.title}`,
+          text: `${item.desc}\n\nEl algoritmo te muestra esto porque coincide con tu historial reciente. La pregunta crítica es: ¿Lo consumes por interés real o por inercia de feed?`,
+          options: [
+            { text: 'Consumir y guardar para reflexión posterior', correct: true, feedback: '✅ Gestión activa. Organizas contenido en lugar de solo consumirlo.' },
+            { text: 'Scrollear rápido al siguiente tema', correct: false, feedback: '❌ Consumo fragmentado sin retención crítica. El algoritmo gana tiempo, tú pierdes foco.' }
+          ]
+        });
+      });
+      grid.appendChild(card);
+    });
+
+    document.getElementById('explore-search').addEventListener('input', e => {
+      const q = e.target.value.toLowerCase();
+      grid.querySelectorAll('.explore-card').forEach(c => {
+        c.style.display = c.textContent.toLowerCase().includes(q) ? 'block' : 'none';
+      });
+    });
+
+    container.querySelectorAll('.tag[data-cat]').forEach(tag => {
+      tag.addEventListener('click', () => {
+        const cat = tag.dataset.cat;
+        grid.querySelectorAll('.explore-card').forEach(c => {
+          c.style.display = (cat === 'all' || c.dataset.cat === cat) ? 'block' : 'none';
+        });
+      });
+    });
+  }
+
+  function renderProfile() {
+    const container = document.getElementById('profile-content');
+    const completed = state.challengesCompleted.length;
+    const total = Object.keys(challenges).length;
+    const accuracy = Object.values(state.challengeResults).filter(r => r).length;
+    const sessionMins = Math.floor((Date.now() - state.sessionStart) / 60000);
+    
+    container.innerHTML = `
+      <div style="padding:16px; text-align:center; border-bottom:1px solid var(--border);">
+        <div class="avatar" style="width:64px;height:64px;font-size:24px;margin:0 auto 12px;background:var(--accent);color:#fff;">ES</div>
+        <div style="font-weight:800;font-size:20px;">Estudiante COLPEIN</div>
+        <div style="color:var(--text-secondary);">@usr_10</div>
+        <div style="margin-top:8px;font-size:14px;color:var(--text-secondary);">Navegando desde hace ${sessionMins} min</div>
+      </div>
+      <div class="profile-stats">
+        <div class="stat-box"><div class="stat-num">${state.autonomy}%</div><div class="stat-label">Autonomía</div></div>
+        <div class="stat-box"><div class="stat-num">${completed}/${total}</div><div class="stat-label">Retos</div></div>
+        <div class="stat-box"><div class="stat-num">${accuracy}</div><div class="stat-label">Aciertos</div></div>
+      </div>
+      <div style="padding:16px; border-bottom:1px solid var(--border);">
+        <div style="font-weight:700; margin-bottom:8px;">Modo de Feed Actual</div>
+        <div style="font-size:14px; color:var(--text-secondary);">${state.feedMode === 'manipulating' ? '🔴 Manipulación activa. El algoritmo prioriza retención.' : state.feedMode === 'balanced' ? '🟡 Transición. Aparecen opciones conscientes.' : '🟢 Consciente. Tú filtras, el algoritmo sugiere.'}</div>
+      </div>
+      <div class="challenge-history">
+        <div style="font-weight:700; margin-bottom:12px;">Historial de Decisiones</div>
+        ${state.challengesCompleted.length === 0 ? '<div style="color:var(--text-secondary); font-size:14px;">Aún no has completado retos. Interactúa con el feed para comenzar.</div>' : 
+          state.challengesCompleted.map(id => {
+            const ch = challenges[id];
+            const passed = state.challengeResults[id];
+            return `<div class="history-item"><span>${ch.title.split(':')[0]}</span><span class="history-status ${passed ? 'pass' : 'fail'}">${passed ? '✅ Acierto' : '❌ Fallo'}</span></div>`;
+          }).join('')
+        }
+      </div>
+      <div style="padding:16px;">
+        <button id="reset-progress" style="width:100%; background:var(--bg-tertiary); color:var(--danger); border:1px solid var(--border); padding:12px; border-radius:8px; cursor:pointer; font-weight:700;">Reiniciar Progreso</button>
+      </div>
+    `;
+    document.getElementById('reset-progress').addEventListener('click', () => {
+      if(confirm('¿Reiniciar todo el progreso? Esta acción no se puede deshacer.')) {
+        localStorage.removeItem('escapeAlgoState');
+        location.reload();
+      }
+    });
+  }
+
+  function openChat(msg) {
+    state.activeChat = msg;
+    document.getElementById('chat-name').textContent = msg.name;
+    document.getElementById('chat-avatar').textContent = msg.avatar;
+    chatMessages.innerHTML = '';
+    msg.chat.forEach(m => {
+      const bubble = document.createElement('div');
+      bubble.className = `bubble ${m.from === 'me' ? 'outgoing' : 'incoming'}`;
+      bubble.innerHTML = m.text;
+      chatMessages.appendChild(bubble);
+    });
+    msgList.style.display = 'none';
+    chatView.classList.add('active');
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+
+    chatMessages.querySelectorAll('a').forEach(link => {
+      link.addEventListener('click', (e) => {
+        e.preventDefault();
+        const type = link.dataset.link;
+        if (type === 'phishing') openChallenge('phishing_steam');
+        if (type === 'autonomy_toggle') openModal({
+          title: '⚙️ Configuración de Feed-X',
+          text: 'El algoritmo te permite "desactivar" la personalización, pero en realidad solo reduce la frecuencia de ciertos contenidos. La autonomía real requiere verificación activa y límites de uso.',
+          options: [
+            { text: 'Aceptar configuración rápida', correct: false, feedback: '⚠️ Ilusión de control. El algoritmo sigue operando en segundo plano. El 48.4% solo da like sin organizar.' },
+            { text: 'Establecer límites de tiempo y verificar fuentes manualmente', correct: true, feedback: '✅ Autonomía real. Combinas configuración técnica con hábito crítico.' }
+          ]
+        });
+      });
+    });
+  }
+
+  function updateAutonomy(delta) {
+    state.autonomy = Math.min(100, Math.max(0, state.autonomy + delta));
+    autonomyFill.style.width = `${state.autonomy}%`;
+    autonomyPercent.textContent = `${state.autonomy}%`;
+    
+    if (state.autonomy < 30) {
+      autonomyFill.style.background = 'var(--danger)';
+      meterTip.textContent = 'Feed-X controla tu feed. El consumo pasivo domina tus decisiones.';
+      state.feedMode = 'manipulating';
+      algoStatus.textContent = 'Feed-X optimizando...';
+      algoStatus.className = 'algo-status manipulating';
+    } else if (state.autonomy < 60) {
+      autonomyFill.style.background = 'var(--warning)';
+      meterTip.textContent = 'Estás cuestionando el algoritmo. Aparecen opciones conscientes.';
+      state.feedMode = 'balanced';
+      algoStatus.textContent = 'Feed-X ajustando...';
+      algoStatus.className = 'algo-status';
+    } else {
+      autonomyFill.style.background = 'var(--success)';
+      meterTip.textContent = 'Modo consciente activo. Tú decides qué consumir y cuándo parar.';
+      state.feedMode = 'conscious';
+      algoStatus.textContent = 'Feed consciente activo';
+      algoStatus.className = 'algo-status conscious';
+    }
+    renderFeed();
+    saveState();
+    if (state.autonomy >= 90) {
+      setTimeout(() => openModal({
+        title: '🎉 ¡Escape del Algoritmo Completado!',
+        text: 'Has recuperado tu autonomía digital. Feed-X ya no dicta tu consumo. Recuerda: el algoritmo no es malo, pero tu conciencia crítica es tu mejor firewall. El 33% de tu curso ya muestra hábitos críticos. Tú eres parte de ese cambio. Comparte esta experiencia con tu curso.',
+        options: [{ text: 'Cerrar y continuar navegando conscientemente', correct: true, feedback: '' }]
+      }), 600);
+    }
+  }
+
+  function openChallenge(id) {
+    const ch = challenges[id];
+    if (!ch) return;
+    if (state.challengesCompleted.includes(id)) {
+      openModal({ title: '✅ Reto completado', text: 'Ya resolviste este desafío. Tu autonomía se mantiene.', options: [{ text: 'Entendido', correct: true, feedback: '' }] });
+      return;
+    }
+    openModal({
+      title: ch.title,
+      text: ch.text,
+      options: ch.options,
+      onComplete: (correct) => {
+        state.challengesCompleted.push(id);
+        state.challengeResults[id] = correct;
+        if (correct) updateAutonomy(20);
+        else updateAutonomy(-5);
+      }
+    });
+  }
+
+  function openModal({ title, text, options, onComplete }) {
+    modalContent.innerHTML = `
+      <h2>${title}</h2>
+      <p>${text.replace(/\n/g, '<br>')}</p>
+      <div class="challenge-options" id="modal-options"></div>
+      <div class="feedback" id="modal-feedback"></div>
+      <button class="modal-close" id="modal-close">Continuar</button>
+    `;
+    const optsContainer = document.getElementById('modal-options');
+    const feedback = document.getElementById('modal-feedback');
+    const closeBtn = document.getElementById('modal-close');
+
+    options.forEach(opt => {
+      const btn = document.createElement('button');
+      btn.className = 'challenge-btn';
+      btn.textContent = opt.text;
+      btn.addEventListener('click', () => {
+        optsContainer.querySelectorAll('.challenge-btn').forEach(b => b.disabled = true);
+        btn.classList.add(opt.correct ? 'correct' : 'wrong');
+        feedback.textContent = opt.feedback;
+        feedback.className = `feedback show ${opt.correct ? 'success' : 'error'}`;
+        closeBtn.style.display = 'block';
+        if (onComplete) onComplete(opt.correct);
+      });
+      optsContainer.appendChild(btn);
+    });
+
+    closeBtn.addEventListener('click', () => {
+      modalOverlay.classList.remove('active');
+    });
+
+    modalOverlay.classList.add('active');
+  }
+
+  function showToast(msg) {
+    toast.textContent = msg;
+    toast.classList.add('show');
+    setTimeout(() => toast.classList.remove('show'), 3000);
+  }
+
+  // SEARCH & AUTOCOMPLETE
+  function renderSearchDropdown(query) {
+    searchDropdown.innerHTML = '';
+    if (!query) { searchDropdown.classList.remove('open'); return; }
+    const matches = searchDatabase.filter(s => s.term.includes(query.toLowerCase()));
+    if (matches.length === 0) { searchDropdown.classList.remove('open'); return; }
+
+    const section = document.createElement('div');
+    section.className = 'search-section';
+    section.textContent = 'Sugerencias y resultados';
+    searchDropdown.appendChild(section);
+
+    matches.forEach(m => {
+      m.results.forEach(r => {
+        const item = document.createElement('div');
+        item.className = `search-item ${m.type === 'entertainment' ? 'algo-suggest' : ''}`;
+        item.innerHTML = `<span class="label">${r}</span><span class="meta">${m.type === 'educational' ? 'Recurso crítico' : m.type === 'security' ? 'Protección' : m.type === 'entertainment' ? 'Viral · Sugerencia algoritmo' : 'Mixto'}</span>`;
+        item.addEventListener('click', () => {
+          searchInput.value = r;
+          searchDropdown.classList.remove('open');
+          if (m.type === 'entertainment') {
+            openChallenge('doomscroll_reflection');
+          } else {
+            updateAutonomy(5);
+            showToast('Búsqueda consciente registrada. +5% Autonomía');
+          }
+        });
+        searchDropdown.appendChild(item);
+      });
+    });
+    searchDropdown.classList.add('open');
+  }
+
+  let searchTimeout;
+  searchInput.addEventListener('input', e => {
+    clearTimeout(searchTimeout);
+    searchTimeout = setTimeout(() => renderSearchDropdown(e.target.value), 300);
+  });
+  searchInput.addEventListener('keydown', e => {
+    if (e.key === 'Enter') {
+      searchDropdown.classList.remove('open');
+      const q = searchInput.value.trim();
+      if (q) {
+        updateAutonomy(10);
+        openModal({
+          title: '🔍 Búsqueda Consciente Detectada',
+          text: `Has escrito "${q}" sin dejarte llevar por el autocompletar. El 67.7% de estudiantes termina distraído por sugerencias. Tú mantuviste tu intención.`,
+          options: [{ text: 'Continuar buscando', correct: true, feedback: '✅ Gestión de contenidos activa. Sigues recuperando autonomía.' }]
+        });
+      }
+    }
+  });
+  document.addEventListener('click', e => { if (!e.target.closest('.search-wrapper')) searchDropdown.classList.remove('open'); });
+
+  // COMPOSE MODAL
+  document.getElementById('btn-new-post').addEventListener('click', () => {
+    modalContent.innerHTML = `
+      <h2>📝 Nuevo Post</h2>
+      <div class="compose-area" id="compose-text" contenteditable="true"></div>
+      <div class="compose-footer">
+        <div class="char-count" id="char-count">0/280</div>
+        <div class="compose-actions">
+          <button class="compose-btn" title="Imagen">🖼️</button>
+          <button class="compose-btn" title="GIF">🎞️</button>
+          <button class="compose-btn" title="Encuesta">📊</button>
+        </div>
+        <button class="post-submit" id="submit-post" disabled>Postear</button>
+      </div>
+    `;
+    const composeArea = document.getElementById('compose-text');
+    const charCount = document.getElementById('char-count');
+    const submitBtn = document.getElementById('submit-post');
+
+    composeArea.addEventListener('input', () => {
+      const len = composeArea.innerText.length;
+      charCount.textContent = `${len}/280`;
+      charCount.className = `char-count ${len > 280 ? 'over' : len > 250 ? 'warn' : ''}`;
+      submitBtn.disabled = len === 0 || len > 280;
+    });
+
+    submitBtn.addEventListener('click', () => {
+      const text = composeArea.innerText.trim();
+      modalOverlay.classList.remove('active');
+      if (text.includes('http') || text.includes('.com')) {
+        openChallenge('phishing_steam');
+      } else if (text.includes('#') && text.length < 50) {
+        updateAutonomy(-5);
+        showToast('Post viral sin contexto. Feed-X lo amplificará, pero pierdes autonomía.');
+      } else {
+        updateAutonomy(10);
+        showToast('Publicación consciente. +10% Autonomía');
+      }
+    });
+
+    modalOverlay.classList.add('active');
+  });
+
+  // EVENT LISTENERS
+  document.querySelectorAll('.nav-item').forEach(item => {
+    item.addEventListener('click', () => {
+      document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+      item.classList.add('active');
+      const view = item.dataset.view;
+      if (view === 'messages') { messagesPanel.classList.add('open'); overlayBg.classList.add('active'); renderMessages(); }
+      else if (view === 'notifications') { notificationsPanel.classList.add('open'); overlayBg.classList.add('active'); renderNotifications(); document.getElementById('notif-badge').style.display = 'none'; }
+      else if (view === 'explore') { explorePanel.classList.add('open'); overlayBg.classList.add('active'); renderExplore(); }
+      else if (view === 'profile') { profilePanel.classList.add('open'); overlayBg.classList.add('active'); renderProfile(); }
+    });
+  });
+
+  overlayBg.addEventListener('click', () => {
+    messagesPanel.classList.remove('open');
+    notificationsPanel.classList.remove('open');
+    explorePanel.classList.remove('open');
+    profilePanel.classList.remove('open');
+    overlayBg.classList.remove('active');
+  });
+
+  document.getElementById('close-messages').addEventListener('click', () => { messagesPanel.classList.remove('open'); overlayBg.classList.remove('active'); });
+  document.getElementById('close-notifications').addEventListener('click', () => { notificationsPanel.classList.remove('open'); overlayBg.classList.remove('active'); });
+  document.getElementById('close-explore').addEventListener('click', () => { explorePanel.classList.remove('open'); overlayBg.classList.remove('active'); });
+  document.getElementById('close-profile').addEventListener('click', () => { profilePanel.classList.remove('open'); overlayBg.classList.remove('active'); });
+  document.getElementById('back-to-list').addEventListener('click', () => { chatView.classList.remove('active'); msgList.style.display = 'block'; state.activeChat = null; });
+
+  sendMsgBtn.addEventListener('click', () => {
+    const txt = chatInputField.value.trim();
+    if (!txt || !state.activeChat) return;
+    const bubble = document.createElement('div');
+    bubble.className = 'bubble outgoing';
+    bubble.textContent = txt;
+    chatMessages.appendChild(bubble);
+    chatInputField.value = '';
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+    setTimeout(() => {
+      const reply = document.createElement('div');
+      reply.className = 'bubble incoming';
+      reply.textContent = 'Feed-X ha registrado tu interacción. Tu patrón de respuesta será usado para ajustar tu feed. ¿Deseas mantener el control consciente?';
+      chatMessages.appendChild(reply);
+      chatMessages.scrollTop = chatMessages.scrollHeight;
+    }, 1200);
+  });
+  chatInputField.addEventListener('keypress', e => { if (e.key === 'Enter') sendMsgBtn.click(); });
+
+  feedStream.addEventListener('click', e => {
+    const post = e.target.closest('.post');
+    if (!post) return;
+    const id = parseInt(post.dataset.id);
+    const data = posts.find(p => p.id === id);
+    if (!data) return;
+
+    if (e.target.closest('[data-action="like"]')) {
+      const btn = e.target.closest('[data-action="like"]');
+      btn.classList.toggle('liked');
+      if (btn.classList.contains('liked')) {
+        data.likes++;
+        if (data.promoted || data.tags.includes('#Doomscrolling')) updateAutonomy(-3);
+      } else { data.likes--; }
+      btn.innerHTML = `❤️ ${data.likes}`;
+      return;
+    }
+    if (e.target.closest('[data-action="retweet"]')) {
+      const btn = e.target.closest('[data-action="retweet"]');
+      btn.classList.toggle('retweeted');
+      if (btn.classList.contains('retweeted')) {
+        data.retweets++;
+        if (data.type === 'challenge' && !state.challengesCompleted.includes(data.challengeId)) {
+          updateAutonomy(-5);
+          openModal({ title: '⚠️ RT sin verificar', text: 'Compartir contenido sensible sin pasar por el reto crítico refuerza la cámara de eco. La próxima vez, pausa y verifica.', options: [{ text: 'Entendido', correct: true, feedback: '' }] });
+        }
+      } else { data.retweets--; }
+      btn.innerHTML = `🔁 ${data.retweets}`;
+      return;
+    }
+    
+    if (data.type === 'challenge') openChallenge(data.challengeId);
+    if (data.type === 'reflection') openChallenge(data.challengeId);
+  });
+
+  document.getElementById('refresh-feed').addEventListener('click', () => {
+    feedStream.style.opacity = '0.5';
+    setTimeout(() => {
+      renderFeed();
+      feedStream.style.opacity = '1';
+      showToast('Feed actualizado. El algoritmo reordenó según tu última interacción.');
+    }, 600);
+  });
+
+  document.getElementById('logo').addEventListener('click', () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  });
+
+  // INIT
+  renderFeed();
+  renderTrends();
+  renderSuggestions();
+  updateAutonomy(0);
+</script>
+</body>
+</html>
